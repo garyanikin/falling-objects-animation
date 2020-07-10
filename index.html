@@ -52,21 +52,24 @@
 
         let OBJECTS = []
         let renderloop = null; // store animation frame request
+        let ts = 0;
         // stop render loop when animation out of the viewport and restart it when it's in viewport again
-        render();
+        render()
 
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 20; i++) {
             const getRandomAsset = () => assets[Math.floor(assets.length * Math.random())]
-            addObject(getRandomAsset())
+            setTimeout(() => addObject(getRandomAsset()), Math.floor(Math.random() * 10000))
         }
 
+    
         function render() {
             if (OBJECTS.length) {
                 OBJECTS.forEach(object => object.update())
             }
-            // Add debounce https://github.com/lodash/lodash/blob/master/debounce.js - 1 call in 16ms 
+
             renderloop = requestAnimationFrame(render)
         }
+
 
         function fetcObject(url) {
             return fetch(url)
@@ -84,7 +87,7 @@
 
         async function createObject(name, x) {
             const width = 24, height = 24;
-            const y = -height + Math.floor(Math.random() * 19);
+            const y = -height;
             const fillColor = 'black';
             // fetch svg from url
             const svg = await fetcObject(`/assets/${name}`);
@@ -100,7 +103,7 @@
             svgDoc.style.transform = `translate(${x}px, ${y}px)`;
 
             return {
-                index: OBJECTS.length,
+                key: `${Date.now()}${Math.random()}`,
                 update: function update() {
                     const {x, y, setPosition, remove, container} = this;
                     // set fill color
@@ -120,17 +123,17 @@
                     this.el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
                 },
                 remove: function remove() {
-                    const {index, el} = this;
+                    const {index, el, key} = this;
 
                     requestAnimationFrame(() => {
                         el.remove();
                         // remove object from OBJECTS array
-                        OBJECTS.splice(index, 1);
+                        OBJECTS = OBJECTS.filter(object => object.key !== key)
                     })                   
                 },
                 x,
                 y,
-                container: 20,
+                container: 700,
                 fillColor,
                 el: document.querySelector('.container').appendChild(svgDoc)
                 };
