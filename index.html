@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Падающие предметы</title>
+</head>
+<body>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            width: 1000px;
+            height: 600px;
+            border: 1px solid black;
+            overflow: hidden;
+            /* for animation */
+            display: flex;
+            transform: translateZ(0);
+        }
+        .object {
+            position: relative;
+            margin: 0;
+            will-change: transform, fill;
+        }
+    </style>
+    <div class="container">
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.0/anime.min.js"></script>
+    <script>
+        const assets = [
+            'bugatti.svg',
+            'audi.svg',
+            'dribbble.svg',
+            'elixir.svg',
+            'gatsby.svg',
+            'graphql.svg',
+            'instagram.svg',
+            'runkit.svg',
+            'sega.svg'
+        ]
+
+        const objectSVG = fetcObject( + assets[0]);
+        let objects = [
+            createObject('bugatti')
+        ]
+        let renderloop = null; // store animation frame request
+        // stop render loop when animation out of the viewport and restart it when it's in viewport again
+        // render();
+
+        function render() {
+            
+            // Add debounce https://github.com/lodash/lodash/blob/master/debounce.js - 1 call in 16ms 
+            renderloop = requestAnimationFrame(render)
+        }
+
+        function fetcObject(url) {
+            return fetch(url)
+            .then(r => r.text())
+            .then(text => {
+                console.log(text)
+            })
+            .catch(console.error.bind(console));
+        }
+
+        function createObject(name) {
+            const xml = fetcObject(`/assets/${name}.svg`);
+            document.querySelector('.container').append(xml);
+        }
+    </script>
+</body>
+</html>
