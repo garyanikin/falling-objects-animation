@@ -1,6 +1,6 @@
 /**
 * Анимация падающий объектов
-* @param {svg_url[]} objects - ссылки на svg
+* @param {svg_url[]} assets - ссылки на svg
 * @param {css_gradient[]} gradients - список градиентов
 * @param {
 		speed: [min, max] - диапазон скорости для движения объектов
@@ -12,7 +12,7 @@
 	} options - настройки
 */
 const FallingObjects = async (
-  objects,
+  assets,
   gradients,
   {
     speed = [1, 10],
@@ -21,6 +21,8 @@ const FallingObjects = async (
     initial_opacity = 1,
     min_count = 10,
     max_count = 50,
+    object_width = 24,
+    object_height = 24,
   }
 ) => {
   let IS_ANIMATED = false;
@@ -32,8 +34,7 @@ const FallingObjects = async (
     animate: ($container) => {
       IS_ANIMATED = true;
       $CONTAINER = $container;
-      this.render();
-      // start animation
+      render();
     },
     render,
     spawnObjects,
@@ -42,14 +43,59 @@ const FallingObjects = async (
     },
   };
 
-  // Randomly spawn objects from min_count to max_count
-  function spawnObjects() {}
+  function getRandomAsset() {
+    return assets[Math.floor(assets.length * Math.random())];
+  }
 
-  function render() {
+  function getContainerSize() {
+    return {
+      width: $CONTAINER.offsetWidth,
+      height: $CONTAINER.offsetHeight,
+    };
+  }
+
+  /**
+   * Spawn from left side or from top side of container
+   * return [x, y]
+   */
+  function getStartPosition() {
+    const { width, height } = getContainerSize();
+    const minX = -object_width;
+    const minY = -object_height;
+
+    const randomPosition = Math.floor(Math.random() * (height + width));
+
+    if (randomPosition < height) {
+      return [minX, randomPosition];
+    } else {
+      return [randomPosition - height, minY];
+    }
+  }
+
+  // Randomly spawn objects from min_count to max_count
+  async function spawnObjects() {
+    const isSpawned = (chance) => Math.random() > 1 - chance; // object spawn chance
+    const spawn = async () => {
+      const object_url = getRandomAsset();
+      const [x, y] = getStartPosition();
+      const object = await createObject(object_url, x, y);
+      OBJECTS.push(object);
+    };
+    if (OBJECTS.length < min_count && isSpawned(0.2)) {
+      spawn();
+    }
+
+    // From min_count to max_count chance for spawn / 2
+    if (OBJECTS.length < max_count && isSpawned(0.05)) {
+      spawn();
+    }
+  }
+
+  async function render() {
     if (OBJECTS.length) {
       OBJECTS.forEach((object) => object.update());
     }
-    this.spawnObjects();
+    spawnObjects();
 
     // TODO stop render loop when animation out of the viewport and restart it when it's in viewport again
     if (IS_ANIMATED) renderloop = requestAnimationFrame(render);
@@ -64,18 +110,12 @@ const FallingObjects = async (
       .catch(console.error.bind(console));
   }
 
-  async function addObject(name) {
-    const object = await createObject(name, Math.floor(Math.random() * 1000));
-    OBJECTS.push(object);
-  }
-
-  async function createObject(name, x) {
-    const width = 24,
-      height = 24;
-    const y = -height;
+  async function createObject(object_url, x, y) {
+    const width = object_width,
+      height = object_height;
     const fillColor = "black";
     // fetch svg from url
-    const svg = await fetcObject(`/assets/${name}`);
+    const svg = await fetcObject(object_url);
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(svg, "image/svg+xml").documentElement;
     svgDoc.setAttribute("class", "object");

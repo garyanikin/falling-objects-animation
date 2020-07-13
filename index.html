@@ -36,27 +36,29 @@
     </style>
     <div class="container"></div>
 
+    <script src="./fallingObjects.js"></script>
     <script>
       const assets = [
-        "bugatti.svg",
-        "audi.svg",
-        "dribbble.svg",
-        "elixir.svg",
-        "gatsby.svg",
-        "graphql.svg",
-        "instagram.svg",
-        "runkit.svg",
-        "sega.svg",
+        "/assets/bugatti.svg",
+        "/assets/audi.svg",
+        "/assets/dribbble.svg",
+        "/assets/elixir.svg",
+        "/assets/gatsby.svg",
+        "/assets/graphql.svg",
+        "/assets/instagram.svg",
+        "/assets/runkit.svg",
+        "/assets/sega.svg",
+      ];
+      const gradients = [
+        "linear-gradient(-90deg, #3023AE 0%, #DA4468 27%, #53A0FD 48%, #80C498 72%, #ECE351 100%)",
       ];
 
-      for (let i = 0; i < 20; i++) {
-        const getRandomAsset = () =>
-          assets[Math.floor(assets.length * Math.random())];
-        setTimeout(
-          () => addObject(getRandomAsset()),
-          Math.floor(Math.random() * 10000)
-        );
+      async function init() {
+        const fallingObjects = await FallingObjects(assets, gradients, {});
+        fallingObjects.animate(document.querySelector(".container"));
       }
+
+      init();
     </script>
   </body>
 </html>
