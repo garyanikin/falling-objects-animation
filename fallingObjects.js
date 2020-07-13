@@ -18,10 +18,10 @@ const FallingObjects = async (
     speed = [0.5, 3],
     move_angle = 45,
     initial_opacity = 0.7,
-    min_count = 18,
-    max_count = 40,
-    object_width = 24,
-    object_height = 24,
+    min_count = 12,
+    max_count = 30,
+    object_width = 36,
+    object_height = 36,
   }
 ) => {
   let IS_ANIMATED = false;
@@ -46,6 +46,10 @@ const FallingObjects = async (
     return assets[Math.floor(assets.length * Math.random())];
   }
 
+  function getRandomGradient() {
+    return gradients[Math.floor(gradients.length * Math.random())];
+  }
+
   function getContainerSize() {
     return {
       width: $CONTAINER.offsetWidth,
@@ -58,17 +62,11 @@ const FallingObjects = async (
    * return [x, y]
    */
   function getStartPosition() {
-    const { width, height } = getContainerSize();
-    const minX = -object_width;
+    const { width } = getContainerSize();
     const minY = -object_height;
 
-    const randomPosition = Math.floor(Math.random() * (height + width));
-
-    if (randomPosition < height) {
-      return [minX, randomPosition];
-    } else {
-      return [randomPosition - height, minY];
-    }
+    const randomPosition = Math.floor(Math.random() * width);
+    return [randomPosition, minY];
   }
 
   // Randomly spawn objects from min_count to max_count
@@ -76,8 +74,9 @@ const FallingObjects = async (
     const isSpawned = (chance) => Math.random() > 1 - chance; // object spawn chance
     const spawn = async () => {
       const object_url = getRandomAsset();
+      const gradient = getRandomGradient();
       const [x, y] = getStartPosition();
-      const object = await createObject(object_url, x, y);
+      const object = await createObject(object_url, gradient, x, y);
       OBJECTS.push(object);
     };
     if (OBJECTS.length < min_count && isSpawned(0.2)) {
@@ -109,7 +108,7 @@ const FallingObjects = async (
       .catch(console.error.bind(console));
   }
 
-  async function createObject(object_url, x, y) {
+  async function createObject(object_url, gradient, x, y) {
     const width = object_width,
       height = object_height;
     const fillColor = "black";
@@ -129,23 +128,52 @@ const FallingObjects = async (
     svgDoc.style.transform = `translate(${x}px, ${y}px)`;
 
     return {
+      gradient,
       key: `${Date.now()}${Math.random()}`,
+      getProgress: function getProgress() {
+        const { width, height } = getContainerSize();
+        const { y, x } = this;
+
+        return Math.max(
+          (y + object_height) / height,
+          (x + object_width) / width
+        );
+      },
       getColor: function getColor() {
-        // Get color by x, y. Linear gradient with angle
-        return "black";
+        const progress = this.getProgress.call(this) * 100;
+        const gradient = this.gradient;
+
+        let startColor, stopColor, colorProgress;
+
+        if (progress <= 0) {
+          return gradient[0].color;
+        } else if (progress >= 100) {
+          return gradient[gradient.length - 1].color;
+        }
+
+        gradient.every(function (color, index) {
+          if (color.position >= progress) {
+            const start = gradient[index - 1];
+            const stop = color;
+            colorProgress =
+              (progress - start.position) / (stop.position - start.position);
+            startColor = start.color;
+            stopColor = stop.color;
+            return false;
+          }
+          return true;
+        });
+
+        return chroma.scale([startColor, stopColor])(colorProgress).hex();
       },
       update: function update() {
         const easing = (t) => t * t;
         const { width, height } = getContainerSize();
-        const { y, x, el, setPosition, remove, getColor } = this;
+        const { y, x, el, setPosition, remove, getColor, getProgress } = this;
 
         // set opacity
         el.style.opacity =
-          initial_opacity *
-          (1 -
-            easing(
-              Math.max((y + object_height) / height, (x + object_width) / width)
-            ));
+          initial_opacity * (1 - easing(getProgress.call(this)));
 
         // set fill color
         el.style.fill = getColor.call(this);
