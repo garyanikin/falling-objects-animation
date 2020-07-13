@@ -62,11 +62,17 @@ const FallingObjects = async (
    * return [x, y]
    */
   function getStartPosition() {
-    const { width } = getContainerSize();
+    const { width, height } = getContainerSize();
+    const minX = -object_width;
     const minY = -object_height;
 
-    const randomPosition = Math.floor(Math.random() * width);
-    return [randomPosition, minY];
+    const randomPosition = Math.floor(Math.random() * (height + width));
+
+    if (randomPosition < height) {
+      return [minX, randomPosition];
+    } else {
+      return [randomPosition - height, minY];
+    }
   }
 
   // Randomly spawn objects from min_count to max_count
