@@ -15,12 +15,11 @@ const FallingObjects = async (
   assets,
   gradients,
   {
-    speed = [1, 10],
-    step_size = 1,
+    speed = [0.5, 3],
     move_angle = 45,
-    initial_opacity = 1,
-    min_count = 10,
-    max_count = 50,
+    initial_opacity = 0.7,
+    min_count = 18,
+    max_count = 40,
     object_width = 24,
     object_height = 24,
   }
@@ -122,6 +121,8 @@ const FallingObjects = async (
     // set size
     svgDoc.setAttribute("width", width);
     svgDoc.setAttribute("height", height);
+    // set opacity
+    svgDoc.style.opacity = initial_opacity;
     // set fill color
     svgDoc.style.fill = fillColor;
     // set position
@@ -129,11 +130,25 @@ const FallingObjects = async (
 
     return {
       key: `${Date.now()}${Math.random()}`,
+      getColor: function getColor() {
+        // Get color by x, y. Linear gradient with angle
+        return "black";
+      },
       update: function update() {
+        const easing = (t) => t * t;
         const { width, height } = getContainerSize();
-        const { y, x, step, setPosition, remove } = this;
+        const { y, x, el, setPosition, remove, getColor } = this;
+
+        // set opacity
+        el.style.opacity =
+          initial_opacity *
+          (1 -
+            easing(
+              Math.max((y + object_height) / height, (x + object_width) / width)
+            ));
+
         // set fill color
-        // svgDoc.style.fill = fillColor;
+        el.style.fill = getColor.call(this);
 
         // set position
         setPosition.call(this);
@@ -144,8 +159,10 @@ const FallingObjects = async (
         }
       },
       setPosition: function setPosition() {
-        this.x = this.x + step_size * Math.cos((move_angle * Math.PI) / 180);
-        this.y = this.y + step_size * Math.sin((move_angle * Math.PI) / 180);
+        this.x =
+          this.x + this.step_size * Math.cos((move_angle * Math.PI) / 180);
+        this.y =
+          this.y + this.step_size * Math.sin((move_angle * Math.PI) / 180);
         this.el.style.transform = `translate3d(${this.x}px, ${this.y}px, 0)`;
       },
       remove: function remove() {
@@ -160,6 +177,7 @@ const FallingObjects = async (
       x,
       y,
       container: 700,
+      step_size: speed[0] + Math.random() * (speed[1] - speed[0]),
       fillColor,
       el: document.querySelector(".container").appendChild(svgDoc),
     };
