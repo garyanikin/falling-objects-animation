@@ -1,143 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Падающие предметы</title>
-</head>
-<body>
+  </head>
+  <body>
     <style>
-        * {
-            padding: 0;
-            margin: 0;
-        }
-        html, body {
-            height: 100%;
-        }
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            width: 1000px;
-            height: 600px;
-            border: 1px solid black;
-            overflow: hidden;
-            /* for animation */
-            position: relative;
-        }
-        .object {
-            position: absolute;
-            margin: 0;
-            will-change: transform, fill;
-        }
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        width: 1000px;
+        height: 600px;
+        border: 1px solid black;
+        overflow: hidden;
+        /* for animation */
+        position: relative;
+      }
+      .object {
+        position: absolute;
+        margin: 0;
+        will-change: transform, fill;
+      }
     </style>
-    <div class="container">
-    </div>
+    <div class="container"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.0/anime.min.js"></script>
     <script>
-        const assets = [
-            'bugatti.svg',
-            'audi.svg',
-            'dribbble.svg',
-            'elixir.svg',
-            'gatsby.svg',
-            'graphql.svg',
-            'instagram.svg',
-            'runkit.svg',
-            'sega.svg'
-        ]
+      const assets = [
+        "bugatti.svg",
+        "audi.svg",
+        "dribbble.svg",
+        "elixir.svg",
+        "gatsby.svg",
+        "graphql.svg",
+        "instagram.svg",
+        "runkit.svg",
+        "sega.svg",
+      ];
 
-        let OBJECTS = []
-        let renderloop = null; // store animation frame request
-        let ts = 0;
-        // stop render loop when animation out of the viewport and restart it when it's in viewport again
-        render()
-
-        for (let i = 0; i < 20; i++) {
-            const getRandomAsset = () => assets[Math.floor(assets.length * Math.random())]
-            setTimeout(() => addObject(getRandomAsset()), Math.floor(Math.random() * 10000))
-        }
-
-    
-        function render() {
-            if (OBJECTS.length) {
-                OBJECTS.forEach(object => object.update())
-            }
-
-            renderloop = requestAnimationFrame(render)
-        }
-
-
-        function fetcObject(url) {
-            return fetch(url)
-            .then(r => r.text())
-            .then(text => {
-                return text;
-            })
-            .catch(console.error.bind(console));
-        }
-
-        async function addObject(name) {
-            const object = await createObject(name, Math.floor(Math.random() * 1000));
-            OBJECTS.push(object);
-        }
-
-        async function createObject(name, x) {
-            const width = 24, height = 24;
-            const y = -height;
-            const fillColor = 'black';
-            // fetch svg from url
-            const svg = await fetcObject(`/assets/${name}`);
-            const parser = new DOMParser();
-            const svgDoc = parser.parseFromString(svg, "image/svg+xml").documentElement;
-            svgDoc.setAttribute('class', 'object');
-            // set size
-            svgDoc.setAttribute('width', width);
-            svgDoc.setAttribute('height', height);
-            // set fill color
-            svgDoc.style.fill = fillColor;
-            // set position
-            svgDoc.style.transform = `translate(${x}px, ${y}px)`;
-
-            return {
-                key: `${Date.now()}${Math.random()}`,
-                update: function update() {
-                    const {x, y, setPosition, remove, container} = this;
-                    // set fill color
-                    // svgDoc.style.fill = fillColor;
-                    // set position
-                    const newY = y + 1;
-                    setPosition.call(this, x, newY);
-
-                    const transitionEnd = newY > container;
-                    if (transitionEnd){
-                        remove.call(this);
-                    }
-                },
-                setPosition: function setPosition(x, y) {
-                    this.x = x;
-                    this.y = y;
-                    this.el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-                },
-                remove: function remove() {
-                    const {index, el, key} = this;
-
-                    requestAnimationFrame(() => {
-                        el.remove();
-                        // remove object from OBJECTS array
-                        OBJECTS = OBJECTS.filter(object => object.key !== key)
-                    })                   
-                },
-                x,
-                y,
-                container: 700,
-                fillColor,
-                el: document.querySelector('.container').appendChild(svgDoc)
-                };
-        }
+      for (let i = 0; i < 20; i++) {
+        const getRandomAsset = () =>
+          assets[Math.floor(assets.length * Math.random())];
+        setTimeout(
+          () => addObject(getRandomAsset()),
+          Math.floor(Math.random() * 10000)
+        );
+      }
     </script>
-</body>
+  </body>
 </html>
