@@ -130,22 +130,23 @@ const FallingObjects = async (
     return {
       key: `${Date.now()}${Math.random()}`,
       update: function update() {
-        const { x, y, setPosition, remove, container } = this;
+        const { width, height } = getContainerSize();
+        const { y, x, step, setPosition, remove } = this;
         // set fill color
         // svgDoc.style.fill = fillColor;
-        // set position
-        const newY = y + 1;
-        setPosition.call(this, x, newY);
 
-        const transitionEnd = newY > container;
+        // set position
+        setPosition.call(this);
+
+        const transitionEnd = y > height || x > width;
         if (transitionEnd) {
           remove.call(this);
         }
       },
-      setPosition: function setPosition(x, y) {
-        this.x = x;
-        this.y = y;
-        this.el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      setPosition: function setPosition() {
+        this.x = this.x + step_size * Math.cos((move_angle * Math.PI) / 180);
+        this.y = this.y + step_size * Math.sin((move_angle * Math.PI) / 180);
+        this.el.style.transform = `translate3d(${this.x}px, ${this.y}px, 0)`;
       },
       remove: function remove() {
         const { index, el, key } = this;
