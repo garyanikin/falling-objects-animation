@@ -68,14 +68,12 @@ const FallingObjects = async (
     const minX = -object_width;
     const minY = -object_height;
 
-    const randomPosition = Math.floor(
-      Math.random() * (height + width - object_width)
-    );
+    const randomPosition = Math.floor(Math.random() * (height + width));
 
     if (randomPosition < height) {
-      return [minX, randomPosition];
+      return [0 - object_width, randomPosition - object_height];
     } else {
-      return [randomPosition - height, minY];
+      return [randomPosition - height - object_width, 0 - object_height];
     }
   }
 
