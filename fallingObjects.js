@@ -19,7 +19,7 @@ const FallingObjects = async (
     speed = [10, 20],
     move_angle = 45,
     initial_opacity = 0.7,
-    min_count = 5,
+    min_count = 3,
     max_count = 10,
     object_width = 100,
     object_height = 100,
@@ -68,7 +68,9 @@ const FallingObjects = async (
     const minX = -object_width;
     const minY = -object_height;
 
-    const randomPosition = Math.floor(Math.random() * (height + width));
+    const randomPosition = Math.floor(
+      Math.random() * (height + width - object_width)
+    );
 
     if (randomPosition < height) {
       return [minX, randomPosition];
@@ -79,6 +81,7 @@ const FallingObjects = async (
 
   // Randomly spawn objects from min_count to max_count
   async function spawnObjects() {
+    console.log(OBJECTS.length);
     const isSpawned = (chance) => Math.random() > 1 - chance; // object spawn chance
     const spawn = async () => {
       const object_url = getRandomAsset();
@@ -188,7 +191,6 @@ const FallingObjects = async (
 
         if (this.tick === this.delay) {
           const easing = (t) => t * t;
-          const { width, height } = getContainerSize();
           const { y, x, el, setPosition, getColor, getProgress } = this;
           const progress = getProgress.call(this);
 
@@ -211,6 +213,7 @@ const FallingObjects = async (
 
         this.tick = this.tick + 1;
 
+        const { width, height } = getContainerSize();
         const transitionEnd = y > height || x > width;
         if (transitionEnd) {
           this.remove.call(this);
