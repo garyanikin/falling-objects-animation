@@ -15,13 +15,15 @@ const FallingObjects = async (
   assets,
   gradients,
   {
-    speed = [0.5, 3],
+    delay = [1, 5],
+    speed = [10, 20],
     move_angle = 45,
     initial_opacity = 0.7,
-    min_count = 12,
-    max_count = 30,
-    object_width = 36,
-    object_height = 36,
+    min_count = 5,
+    max_count = 10,
+    object_width = 100,
+    object_height = 100,
+    timeout = 2000,
   }
 ) => {
   let IS_ANIMATED = false;
@@ -114,6 +116,12 @@ const FallingObjects = async (
       .catch(console.error.bind(console));
   }
 
+  function cloneObject(object) {
+    let cloned = object.cloneNode(true);
+    $CONTAINER.appendChild(cloned);
+    setTimeout(() => cloned.remove(), timeout);
+  }
+
   async function createObject(object_url, gradient, x, y) {
     const width = object_width,
       height = object_height;
@@ -173,30 +181,46 @@ const FallingObjects = async (
         return chroma.scale([startColor, stopColor])(colorProgress).hex();
       },
       update: function update() {
-        const easing = (t) => t * t;
-        const { width, height } = getContainerSize();
-        const { y, x, el, setPosition, remove, getColor, getProgress } = this;
+        // Create variable to slow down object moving
+        if (!this.tick) {
+          this.tick = 0;
+        }
 
-        // set opacity
-        el.style.opacity =
-          initial_opacity * (1 - easing(getProgress.call(this)));
+        if (this.tick === this.delay) {
+          const easing = (t) => t * t;
+          const { width, height } = getContainerSize();
+          const { y, x, el, setPosition, getColor, getProgress } = this;
+          const progress = getProgress.call(this);
 
-        // set fill color
-        el.style.fill = getColor.call(this);
+          if (progress > 1) {
+            this.remove.call(this);
+            return;
+          }
 
-        // set position
-        setPosition.call(this);
+          cloneObject(el);
+          // set opacity
+          el.style.opacity = initial_opacity * (1 - easing(progress));
+
+          // set fill color
+          el.style.fill = getColor.call(this);
+
+          // set position
+          setPosition.call(this);
+          this.tick = 0;
+        }
+
+        this.tick = this.tick + 1;
 
         const transitionEnd = y > height || x > width;
         if (transitionEnd) {
-          remove.call(this);
+          this.remove.call(this);
         }
       },
       setPosition: function setPosition() {
         this.x =
-          this.x + this.step_size * Math.cos((move_angle * Math.PI) / 180);
+          this.x + this.step_size * Math.cos((move_angle * Math.PI) / 180) * 2;
         this.y =
-          this.y + this.step_size * Math.sin((move_angle * Math.PI) / 180);
+          this.y + this.step_size * Math.sin((move_angle * Math.PI) / 180) * 2;
         this.el.style.transform = `translate3d(${this.x}px, ${this.y}px, 0)`;
       },
       remove: function remove() {
@@ -212,8 +236,9 @@ const FallingObjects = async (
       y,
       container: 700,
       step_size: speed[0] + Math.random() * (speed[1] - speed[0]),
+      delay: Math.floor(delay[0] + Math.random() * (delay[1] - delay[0])),
       fillColor,
-      el: document.querySelector(".container").appendChild(svgDoc),
+      el: $CONTAINER.appendChild(svgDoc),
     };
   }
 };
