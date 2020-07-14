@@ -16,14 +16,15 @@ const FallingObjects = async (
   gradients,
   {
     delay = [1, 5],
-    speed = [10, 20],
+    speed = [5, 20], // TODO rename to step size
     move_angle = 45,
     initial_opacity = 0.7,
-    min_count = 3,
-    max_count = 10,
+    min_count = 1,
+    max_count = 4,
     object_width = 100,
     object_height = 100,
-    timeout = 2000,
+    timeout = 4000,
+    timeout_transition = 120,
   }
 ) => {
   let IS_ANIMATED = false;
@@ -117,13 +118,12 @@ const FallingObjects = async (
   }
 
   function cloneObject(object) {
-    const transition = 200;
     let cloned = object.cloneNode(true);
-    cloned.style.transition = `opacity ${transition}ms`;
+    cloned.style.transition = `opacity ${timeout_transition}ms`;
     $CONTAINER.appendChild(cloned);
     setTimeout(() => {
       cloned.style.opacity = 0;
-      setTimeout(() => cloned.remove(), transition);
+      setTimeout(() => cloned.remove(), timeout_transition);
     }, timeout);
   }
 
@@ -239,7 +239,6 @@ const FallingObjects = async (
       },
       x,
       y,
-      container: 700,
       step_size: speed[0] + Math.random() * (speed[1] - speed[0]),
       delay: Math.floor(delay[0] + Math.random() * (delay[1] - delay[0])),
       fillColor,
