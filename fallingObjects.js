@@ -152,8 +152,8 @@ const FallingObjects = async (
         const { y, x } = this;
 
         return Math.max(
-          (y + object_height) / height,
-          (x + object_width) / width
+          (y + object_height) / (height - Math.random() * height * 0.14),
+          (x + object_width) / (width - Math.random() * width * 0.14)
         );
       },
       getColor: function getColor() {
