@@ -79,7 +79,6 @@ const FallingObjects = async (
 
   // Randomly spawn objects from min_count to max_count
   async function spawnObjects() {
-    console.log(OBJECTS.length);
     const isSpawned = (chance) => Math.random() > 1 - chance; // object spawn chance
     const spawn = async () => {
       const object_url = getRandomAsset();
@@ -118,9 +117,14 @@ const FallingObjects = async (
   }
 
   function cloneObject(object) {
+    const transition = 200;
     let cloned = object.cloneNode(true);
+    cloned.style.transition = `opacity ${transition}ms`;
     $CONTAINER.appendChild(cloned);
-    setTimeout(() => cloned.remove(), timeout);
+    setTimeout(() => {
+      cloned.style.opacity = 0;
+      setTimeout(() => cloned.remove(), transition);
+    }, timeout);
   }
 
   async function createObject(object_url, gradient, x, y) {
