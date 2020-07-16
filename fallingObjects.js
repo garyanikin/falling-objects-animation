@@ -6,9 +6,9 @@
 		speed: [min, max] - диапазон скорости для движения объектов
 		step_size: number - длина шага объекта
 		move_angle: number - угол движения объекта
-        initial_opacity: number - начальный opacity объектов
-        min_count: number - минимальное количество объектов на анимации
-        max_count: number - максимальное количество объектов на анимации
+    initial_opacity: number - начальный opacity объектов
+    min_count: number - минимальное количество объектов на анимации
+    max_count: number - максимальное количество объектов на анимации
 	} options - настройки
 */
 const FallingObjects = async (
@@ -16,11 +16,11 @@ const FallingObjects = async (
   gradients,
   {
     delay = [1, 5],
-    speed = [5, 20], // TODO rename to step size
+    speed = [20, 50], // TODO rename to step size
     move_angle = 45,
     initial_opacity = 0.7,
     min_count = 1,
-    max_count = 4,
+    max_count = 3,
     object_width = 100,
     object_height = 100,
     timeout = 4000,
