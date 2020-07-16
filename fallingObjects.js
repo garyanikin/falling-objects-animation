@@ -3,12 +3,16 @@
 * @param {svg_url[]} assets - ссылки на svg
 * @param {css_gradient[]} gradients - список градиентов
 * @param {
-		speed: [min, max] - диапазон скорости для движения объектов
-		step_size: number - длина шага объекта
+    delay: [min, max] number - скорость движения объекта (чем значение меньше, тем выше скорость движения)
+    step_size: [min, max] number - длина шага объекта
 		move_angle: number - угол движения объекта
     initial_opacity: number - начальный opacity объектов
     min_count: number - минимальное количество объектов на анимации
     max_count: number - максимальное количество объектов на анимации
+    object_width: number - ширина объектов
+    object_height: number - высота объектов
+    timeout: number - через сколько милисекунд убирать "хвост" у объектов
+    timeout_transition: number - продолжительность анимации исчезновения объектов (fade out)
 	} options - настройки
 */
 const FallingObjects = async (
@@ -16,7 +20,7 @@ const FallingObjects = async (
   gradients,
   {
     delay = [1, 5],
-    speed = [20, 50], // TODO rename to step size
+    step_size = [20, 50], // TODO rename to step size
     move_angle = 45,
     initial_opacity = 0.7,
     min_count = 1,
@@ -27,23 +31,53 @@ const FallingObjects = async (
     timeout_transition = 120,
   }
 ) => {
+  // POLYFILLS
+  var requestAnimationFrame =
+    window.requestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.msRequestAnimationFrame;
+  var cancelAnimationFrame =
+    window.cancelAnimationFrame || window.mozCancelAnimationFrame;
+
+  // VARIABLES
   let IS_ANIMATED = false;
   let $CONTAINER = null;
   let OBJECTS = [];
-  let renderloop = null; // store animation frame request
+  var isResizing = false;
+  // pause animation on resize
+  var onResize = () => {
+    pause();
+    if (isResizing) clearTimeout(isResizing);
+    isResizing = setTimeout(() => {
+      isResizing = false;
+      IS_ANIMATED = true;
+      render();
+    }, 400);
+  };
+  var renderloop = null; // store animation frame request
 
   return {
     animate: ($container) => {
+      window.addEventListener("resize", onResize);
       IS_ANIMATED = true;
       $CONTAINER = $container;
       render();
     },
     render,
+    pause,
     spawnObjects,
     stop: () => {
       IS_ANIMATED = false;
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(renderloop);
     },
   };
+
+  function pause() {
+    IS_ANIMATED = false;
+    cancelAnimationFrame(renderloop);
+  }
 
   function getRandomAsset() {
     return assets[Math.floor(assets.length * Math.random())];
@@ -66,8 +100,6 @@ const FallingObjects = async (
    */
   function getStartPosition() {
     const { width, height } = getContainerSize();
-    const minX = -object_width;
-    const minY = -object_height;
 
     const randomPosition = Math.floor(Math.random() * (height + width));
 
@@ -99,10 +131,12 @@ const FallingObjects = async (
   }
 
   async function render() {
-    if (OBJECTS.length) {
-      OBJECTS.forEach((object) => object.update());
+    if (!isResizing) {
+      if (OBJECTS.length) {
+        OBJECTS.forEach((object) => object.update());
+      }
+      spawnObjects();
     }
-    spawnObjects();
 
     // TODO stop render loop when animation out of the viewport and restart it when it's in viewport again
     if (IS_ANIMATED) renderloop = requestAnimationFrame(render);
@@ -193,7 +227,7 @@ const FallingObjects = async (
 
         if (this.tick === this.delay) {
           const easing = (t) => t * t;
-          const { y, x, el, setPosition, getColor, getProgress } = this;
+          const { el, setPosition, getColor, getProgress } = this;
           const progress = getProgress.call(this);
 
           if (progress > 1) {
@@ -229,7 +263,7 @@ const FallingObjects = async (
         this.el.style.transform = `translate3d(${this.x}px, ${this.y}px, 0)`;
       },
       remove: function remove() {
-        const { index, el, key } = this;
+        const { el, key } = this;
 
         requestAnimationFrame(() => {
           el.remove();
@@ -239,7 +273,7 @@ const FallingObjects = async (
       },
       x,
       y,
-      step_size: speed[0] + Math.random() * (speed[1] - speed[0]),
+      step_size: step_size[0] + Math.random() * (step_size[1] - step_size[0]),
       delay: Math.floor(delay[0] + Math.random() * (delay[1] - delay[0])),
       fillColor,
       el: $CONTAINER.appendChild(svgDoc),
