@@ -63,6 +63,24 @@ const FallingObjects = async (
       IS_ANIMATED = true;
       $CONTAINER = $container;
       render();
+
+      // Disable animation when container not in viewport
+      if (!!window.IntersectionObserver) {
+        let observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.intersectionRatio < 0.2) {
+                pause();
+              } else if (!IS_ANIMATED) {
+                IS_ANIMATED = true;
+                render();
+              }
+            });
+          },
+          { threshold: 0.2 }
+        );
+        observer.observe($CONTAINER);
+      }
     },
     render,
     pause,
