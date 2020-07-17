@@ -17,7 +17,7 @@
 */
 const FallingObjects = async (
   assets,
-  gradients,
+  cssGradients,
   {
     delay = [1, 5],
     step_size = [20, 50], // TODO rename to step size
@@ -41,6 +41,7 @@ const FallingObjects = async (
     window.cancelAnimationFrame || window.mozCancelAnimationFrame;
 
   // VARIABLES
+  var gradients = cssGradients.map((css) => parseGradient(css));
   let IS_ANIMATED = false;
   let $CONTAINER = null;
   let OBJECTS = [];
@@ -130,6 +131,11 @@ const FallingObjects = async (
 
   // Randomly spawn objects from min_count to max_count
   async function spawnObjects() {
+    if (gradients.length === 0) {
+      console.warn("Не загружено не одного градиента");
+      return;
+    }
+
     const isSpawned = (chance) => Math.random() > 1 - chance; // object spawn chance
     const spawn = async () => {
       const object_url = getRandomAsset();
@@ -298,3 +304,17 @@ const FallingObjects = async (
     };
   }
 };
+
+function parseGradient(cssGradient) {
+  if (GradientParser) {
+    const { colorStops } = GradientParser.parse(cssGradient)[0];
+
+    return colorStops.map(({ value, length }) => ({
+      color: `#${value}`,
+      position: length.value,
+    }));
+  } else {
+    console.warn("Подключите gradientParser.js");
+    return [];
+  }
+}

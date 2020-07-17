@@ -39,6 +39,7 @@
     <div class="container"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
+    <script src="./gradientParser.js"></script>
     <script src="./fallingObjects.js"></script>
     <script>
       const assets = [
@@ -52,32 +53,8 @@
         "/assets/runkit.svg",
         "/assets/sega.svg",
       ];
-      const parseGradient = (cssGradient) => [
-        {
-          color: "#3023AE",
-          position: 0,
-        },
-        {
-          color: "#DA4468",
-          position: 27,
-        },
-        {
-          color: "#53A0FD",
-          position: 48,
-        },
-        {
-          color: "#80C498",
-          position: 72,
-        },
-        {
-          color: "#ECE351",
-          position: 100,
-        },
-      ];
       const gradients = [
-        parseGradient(
-          "linear-gradient(-90deg, #3023AE 0%, #DA4468 27%, #53A0FD 48%, #80C498 72%, #ECE351 100%)"
-        ),
+        "linear-gradient(-90deg, #3023AE 0%, #DA4468 27%, #53A0FD 48%, #80C498 72%, #ECE351 100%)",
       ];
 
       async function init() {
