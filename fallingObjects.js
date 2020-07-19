@@ -20,15 +20,14 @@ const FallingObjects = async (
   cssGradients,
   {
     delay = [1, 5],
-    step_size = [20, 50], // TODO rename to step size
+    step_size = [10, 20],
     move_angle = 45,
     initial_opacity = 0.7,
+    opacity_step = 0.05,
     min_count = 1,
     max_count = 3,
-    object_width = 100,
-    object_height = 100,
-    timeout = 4000,
-    timeout_transition = 120,
+    object_width = 300,
+    object_height = 300,
   }
 ) => {
   // POLYFILLS
@@ -44,7 +43,7 @@ const FallingObjects = async (
   var gradients = cssGradients.map((css) => parseGradient(css));
   let IS_ANIMATED = false;
   let $CONTAINER = null;
-  let $CANVAS = null;
+  var $CANVAS = null;
   let OBJECTS = [];
   var isResizing = false;
   // pause animation on resize
@@ -168,8 +167,8 @@ const FallingObjects = async (
       const object_url = getRandomAsset();
       const gradient = getRandomGradient();
       const [x, y] = getStartPosition();
-      // const object = await createObject(object_url, gradient, x, y);
-      // OBJECTS.push(object);
+      const object = await createObject(object_url, gradient, x, y);
+      OBJECTS.push(object);
     };
     if (OBJECTS.length < min_count && isSpawned(0.2)) {
       spawn();
@@ -193,7 +192,7 @@ const FallingObjects = async (
     if (IS_ANIMATED) renderloop = requestAnimationFrame(render);
   }
 
-  function fetcObject(url) {
+  function fetchObject(url) {
     return fetch(url)
       .then((r) => r.text())
       .then((text) => {
@@ -216,8 +215,9 @@ const FallingObjects = async (
     const width = object_width,
       height = object_height;
     const fillColor = "black";
+
     // fetch svg from url
-    const svg = await fetcObject(object_url);
+    const svg = await fetchObject(object_url);
 
     // TODO Change to Canvas
     const parser = new DOMParser();
@@ -230,11 +230,13 @@ const FallingObjects = async (
     svgDoc.style.opacity = initial_opacity;
     // set fill color
     svgDoc.style.fill = fillColor;
-    // set position
-    svgDoc.style.transform = `translate(${x}px, ${y}px)`;
 
     return {
+      getCanvas: () => {
+        return $CANVAS;
+      },
       gradient,
+      svg: svgDoc,
       key: `${Date.now()}${Math.random()}`,
       getProgress: function getProgress() {
         const { width, height } = getContainerSize();
@@ -280,7 +282,7 @@ const FallingObjects = async (
 
         if (this.tick === this.delay) {
           const easing = (t) => t * t;
-          const { el, setPosition, getColor, getProgress } = this;
+          const { svg, updatePosition, getColor, getProgress } = this;
           const progress = getProgress.call(this);
 
           if (progress > 1) {
@@ -288,51 +290,52 @@ const FallingObjects = async (
             return;
           }
 
-          cloneObject(el);
           // set opacity
-          el.style.opacity = initial_opacity * (1 - easing(progress));
+          svg.style.opacity = initial_opacity * (1 - easing(progress));
 
           // set fill color
-          el.style.fill = getColor.call(this);
+          svg.style.fill = getColor.call(this);
 
           // set position
-          setPosition.call(this);
+          const position = updatePosition.call(this);
+          renderObject(this.getCanvas(), svg, position);
+
           this.tick = 0;
         }
 
         this.tick = this.tick + 1;
-
-        const { width, height } = getContainerSize();
-        const transitionEnd = y > height || x > width;
-        if (transitionEnd) {
-          this.remove.call(this);
-        }
       },
-      setPosition: function setPosition() {
+      updatePosition: function updatePosition() {
         this.x =
           this.x + this.step_size * Math.cos((move_angle * Math.PI) / 180) * 2;
         this.y =
           this.y + this.step_size * Math.sin((move_angle * Math.PI) / 180) * 2;
-        this.el.style.transform = `translate3d(${this.x}px, ${this.y}px, 0)`;
+        return { x: this.x, y: this.y };
       },
       remove: function remove() {
-        const { el, key } = this;
-
-        requestAnimationFrame(() => {
-          el.remove();
-          // remove object from OBJECTS array
-          OBJECTS = OBJECTS.filter((object) => object.key !== key);
-        });
+        const { key } = this;
+        // remove object from OBJECTS array
+        OBJECTS = OBJECTS.filter((object) => object.key !== key);
       },
       x,
       y,
       step_size: step_size[0] + Math.random() * (step_size[1] - step_size[0]),
       delay: Math.floor(delay[0] + Math.random() * (delay[1] - delay[0])),
       fillColor,
-      el: $CONTAINER.appendChild(svgDoc),
     };
   }
 };
+
+function renderObject(canvas, svg, { x, y }) {
+  var ctx = canvas.getContext("2d");
+  var image = new Image();
+  image.onload = function () {
+    ctx.drawImage(image, x, y);
+  };
+
+  image.src =
+    "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.outerHTML);
+}
 
 function parseGradient(cssGradient) {
   if (GradientParser) {
