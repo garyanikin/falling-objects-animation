@@ -6,7 +6,10 @@
     delay: [min, max] number - скорость движения объекта (чем значение меньше, тем выше скорость движения)
     step_size: [min, max] number - длина шага объекта
 		move_angle: number - угол движения объекта
-    initial_opacity: number - начальный opacity объектов
+    initial_opacity: float - opacity объекта в начале анимации
+    end_opacity: float - opacity объекта в конце анимации
+    opacity_step: float - сила "бленда" объектов с фоном // TODO rename to background_blend_step
+    opacity_delay: float - скорость "бленда" объектов с фоном // TODO rename to background_blend_delay
     min_count: number - минимальное количество объектов на анимации
     max_count: number - максимальное количество объектов на анимации
     object_width: number - ширина объектов
@@ -19,11 +22,14 @@ const FallingObjects = async (
   assets,
   cssGradients,
   {
-    delay = [1, 5],
-    step_size = [10, 20],
+    delay = [1, 3],
+    step_size = [10, 40],
     move_angle = 45,
-    initial_opacity = 0.7,
-    opacity_step = 0.05,
+    initial_opacity = 0.9,
+    end_opacity = 0.1,
+    opacity_step = 0.08,
+    opacity_delay = 10,
+    background_color = "white",
     min_count = 1,
     max_count = 3,
     object_width = 300,
@@ -44,6 +50,7 @@ const FallingObjects = async (
   let IS_ANIMATED = false;
   let $CONTAINER = null;
   var $CANVAS = null;
+  var TICK = 0;
   let OBJECTS = [];
   var isResizing = false;
   // pause animation on resize
@@ -68,6 +75,7 @@ const FallingObjects = async (
       if (!$CANVAS) {
         initCanvas($CONTAINER);
       }
+      spawnObjects();
       render();
 
       // Disable animation when container not in viewport
@@ -98,15 +106,22 @@ const FallingObjects = async (
     },
   };
 
+  function opacityStep() {
+    const ctx = $CANVAS.getContext("2d");
+    ctx.fillRect(0, 0, $CANVAS.width / 2, $CANVAS.height / 2);
+  }
+
   function createCanvas($container) {
     var canvas = document.createElement("canvas");
 
     const { width, height } = getContainerSize();
+    // canvas x2 DPI for retina
     canvas.width = width * 2;
     canvas.height = height * 2;
     canvas.style.width = width + "px";
     canvas.style.height = height + "px";
     context = canvas.getContext("2d");
+    context.fillStyle = chroma(background_color).alpha(opacity_step);
     context.scale(2, 2);
     $CANVAS = $container.appendChild(canvas);
   }
@@ -139,6 +154,7 @@ const FallingObjects = async (
     };
   }
 
+  // TODO многие объекты появляются вне вьюпорта
   /**
    * Spawn from left side or from top side of container
    * return [x, y]
@@ -188,6 +204,14 @@ const FallingObjects = async (
       spawnObjects();
     }
 
+    // Blend old objects with background
+    if (TICK > opacity_delay) {
+      opacityStep();
+      TICK = 0;
+    } else {
+      TICK++;
+    }
+
     // TODO stop render loop when animation out of the viewport and restart it when it's in viewport again
     if (IS_ANIMATED) renderloop = requestAnimationFrame(render);
   }
@@ -199,16 +223,6 @@ const FallingObjects = async (
         return text;
       })
       .catch(console.error.bind(console));
-  }
-
-  function cloneObject(object) {
-    // let cloned = object.cloneNode(true);
-    // cloned.style.transition = `opacity ${timeout_transition}ms`;
-    // $CONTAINER.appendChild(cloned);
-    // setTimeout(() => {
-    //   cloned.style.opacity = 0;
-    //   setTimeout(() => cloned.remove(), timeout_transition);
-    // }, timeout);
   }
 
   async function createObject(object_url, gradient, x, y) {
@@ -236,7 +250,7 @@ const FallingObjects = async (
         return $CANVAS;
       },
       gradient,
-      svg: svgDoc,
+      svg: svgDoc, // вместо того чтобы хранить SVGElement рендерить разметку svg с помощью текста getSvg(fill, opacity)
       key: `${Date.now()}${Math.random()}`,
       getProgress: function getProgress() {
         const { width, height } = getContainerSize();
@@ -291,7 +305,9 @@ const FallingObjects = async (
           }
 
           // set opacity
-          svg.style.opacity = initial_opacity * (1 - easing(progress));
+          svg.style.opacity =
+            (initial_opacity - end_opacity) * (1 - easing(progress)) +
+            end_opacity;
 
           // set fill color
           svg.style.fill = getColor.call(this);
