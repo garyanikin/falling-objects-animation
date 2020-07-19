@@ -1,5 +1,5 @@
 /**
-* Анимация падающий объектов
+* Анимация падающих объектов 
 * @param {svg_url[]} assets - ссылки на svg
 * @param {css_gradient[]} gradients - список градиентов
 * @param {
@@ -44,6 +44,7 @@ const FallingObjects = async (
   var gradients = cssGradients.map((css) => parseGradient(css));
   let IS_ANIMATED = false;
   let $CONTAINER = null;
+  let $CANVAS = null;
   let OBJECTS = [];
   var isResizing = false;
   // pause animation on resize
@@ -63,6 +64,11 @@ const FallingObjects = async (
       window.addEventListener("resize", onResize);
       IS_ANIMATED = true;
       $CONTAINER = $container;
+
+      // init canvas if there is no one
+      if (!$CANVAS) {
+        initCanvas($CONTAINER);
+      }
       render();
 
       // Disable animation when container not in viewport
@@ -92,6 +98,27 @@ const FallingObjects = async (
       cancelAnimationFrame(renderloop);
     },
   };
+
+  function createCanvas($container) {
+    var canvas = document.createElement("canvas");
+
+    const { width, height } = getContainerSize();
+    canvas.width = width * 2;
+    canvas.height = height * 2;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    context = canvas.getContext("2d");
+    context.scale(2, 2);
+    $CANVAS = $container.appendChild(canvas);
+  }
+
+  function initCanvas($container) {
+    if (!$container.children.length) {
+      createCanvas($container);
+    } else {
+      // Detect if there is canvas
+    }
+  }
 
   function pause() {
     IS_ANIMATED = false;
@@ -141,8 +168,8 @@ const FallingObjects = async (
       const object_url = getRandomAsset();
       const gradient = getRandomGradient();
       const [x, y] = getStartPosition();
-      const object = await createObject(object_url, gradient, x, y);
-      OBJECTS.push(object);
+      // const object = await createObject(object_url, gradient, x, y);
+      // OBJECTS.push(object);
     };
     if (OBJECTS.length < min_count && isSpawned(0.2)) {
       spawn();
@@ -176,13 +203,13 @@ const FallingObjects = async (
   }
 
   function cloneObject(object) {
-    let cloned = object.cloneNode(true);
-    cloned.style.transition = `opacity ${timeout_transition}ms`;
-    $CONTAINER.appendChild(cloned);
-    setTimeout(() => {
-      cloned.style.opacity = 0;
-      setTimeout(() => cloned.remove(), timeout_transition);
-    }, timeout);
+    // let cloned = object.cloneNode(true);
+    // cloned.style.transition = `opacity ${timeout_transition}ms`;
+    // $CONTAINER.appendChild(cloned);
+    // setTimeout(() => {
+    //   cloned.style.opacity = 0;
+    //   setTimeout(() => cloned.remove(), timeout_transition);
+    // }, timeout);
   }
 
   async function createObject(object_url, gradient, x, y) {
@@ -191,6 +218,8 @@ const FallingObjects = async (
     const fillColor = "black";
     // fetch svg from url
     const svg = await fetcObject(object_url);
+
+    // TODO Change to Canvas
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(svg, "image/svg+xml").documentElement;
     svgDoc.setAttribute("class", "object");
