@@ -16,6 +16,7 @@
     object_height: number - высота объектов
     timeout: number - через сколько милисекунд убирать "хвост" у объектов
     timeout_transition: number - продолжительность анимации исчезновения объектов (fade out)
+    is_retina: boolean - включение режима Retina (DPI x2)
 	} options - настройки
 */
 const FallingObjects = async (
@@ -34,6 +35,7 @@ const FallingObjects = async (
     max_count = 3,
     object_width = 300,
     object_height = 300,
+    is_retina = true,
   }
 ) => {
   // POLYFILLS
@@ -107,22 +109,26 @@ const FallingObjects = async (
   };
 
   function opacityStep() {
+    const DPI = is_retina ? 2 : 1;
     const ctx = $CANVAS.getContext("2d");
-    ctx.fillRect(0, 0, $CANVAS.width / 2, $CANVAS.height / 2);
+    ctx.fillRect(0, 0, $CANVAS.width / DPI, $CANVAS.height / DPI);
   }
 
   function createCanvas($container) {
     var canvas = document.createElement("canvas");
 
+    const DPI = is_retina ? 2 : 1;
     const { width, height } = getContainerSize();
     // canvas x2 DPI for retina
-    canvas.width = width * 2;
-    canvas.height = height * 2;
+    canvas.width = width * DPI;
+    canvas.height = height * DPI;
     canvas.style.width = width + "px";
     canvas.style.height = height + "px";
     context = canvas.getContext("2d");
     context.fillStyle = chroma(background_color).alpha(opacity_step);
-    context.scale(2, 2);
+    if (is_retina) {
+      context.scale(2, 2);
+    }
     $CANVAS = $container.appendChild(canvas);
   }
 
