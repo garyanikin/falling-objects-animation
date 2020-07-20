@@ -26,9 +26,9 @@ const FallingObjects = async (
     step_size = [10, 40],
     move_angle = 45,
     initial_opacity = 0.9,
-    end_opacity = 0.1,
-    opacity_step = 0.08,
-    opacity_delay = 10,
+    end_opacity = 0.6,
+    opacity_step = 0.1,
+    opacity_delay = 0,
     background_color = "white",
     min_count = 1,
     max_count = 3,
@@ -198,18 +198,18 @@ const FallingObjects = async (
 
   async function render() {
     if (!isResizing) {
+      // Blend old objects with background
+      if (TICK >= opacity_delay) {
+        opacityStep();
+        TICK = 0;
+      } else {
+        TICK++;
+      }
+
       if (OBJECTS.length) {
         OBJECTS.forEach((object) => object.update());
       }
       spawnObjects();
-    }
-
-    // Blend old objects with background
-    if (TICK > opacity_delay) {
-      opacityStep();
-      TICK = 0;
-    } else {
-      TICK++;
     }
 
     // TODO stop render loop when animation out of the viewport and restart it when it's in viewport again
