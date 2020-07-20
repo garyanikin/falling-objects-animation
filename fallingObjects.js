@@ -60,6 +60,9 @@ const FallingObjects = async (
     pause();
     if (isResizing) clearTimeout(isResizing);
     isResizing = setTimeout(() => {
+      const { width, height } = getContainerSize();
+      resizeCanvas($CANVAS, { width, height, is_retina });
+
       isResizing = false;
       IS_ANIMATED = true;
       render();
@@ -69,7 +72,7 @@ const FallingObjects = async (
 
   return {
     animate: ($container) => {
-      window.addEventListener("resize", onResize);
+      window.addEventListener("resize", throttle(onResize, 150));
       IS_ANIMATED = true;
       $CONTAINER = $container;
 
@@ -111,7 +114,20 @@ const FallingObjects = async (
   function opacityStep() {
     const DPI = is_retina ? 2 : 1;
     const ctx = $CANVAS.getContext("2d");
+    ctx.fillStyle = chroma(background_color).alpha(opacity_step);
     ctx.fillRect(0, 0, $CANVAS.width / DPI, $CANVAS.height / DPI);
+  }
+
+  function resizeCanvas($canvas, { width, height, is_retina }) {
+    const DPI = is_retina ? 2 : 1;
+    // canvas x2 DPI for retina
+    $canvas.width = width * DPI;
+    $canvas.height = height * DPI;
+    $canvas.style.width = width + "px";
+    $canvas.style.height = height + "px";
+    if (is_retina) {
+      context.scale(2, 2);
+    }
   }
 
   function createCanvas($container) {
@@ -371,4 +387,15 @@ function parseGradient(cssGradient) {
     console.warn("Подключите gradientParser.js");
     return [];
   }
+}
+
+function throttle(func, timeFrame) {
+  var lastTime = 0;
+  return function () {
+    var now = new Date();
+    if (now - lastTime >= timeFrame) {
+      func();
+      lastTime = now;
+    }
+  };
 }
