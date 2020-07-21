@@ -32,9 +32,9 @@ const FallingObjects = async (
     opacity_delay = 0,
     background_color = "white",
     min_count = 1,
-    max_count = 3,
-    object_width = 300,
-    object_height = 300,
+    max_count = 5,
+    object_width = "10vw",
+    object_height = "10vw",
     is_retina = true,
   }
 ) => {
@@ -176,6 +176,34 @@ const FallingObjects = async (
     };
   }
 
+  function getObjectSize(size) {
+    // If size is not a number
+    if (isNaN(size)) {
+      return convertVU(size); // convert viewport units to px
+    }
+    return size;
+  }
+
+  function convertVU(size) {
+    var w =
+      window.innerWidth ||
+      document.documentElement.clientWidth ||
+      document.body.clientWidth;
+    var h =
+      window.innerHeight ||
+      document.documentElement.clientHeight ||
+      document.body.clientheight;
+    var units = { vw: w / 100, vh: h / 100 };
+
+    if (size.substr(-2) === "vw") {
+      return parseFloat(size) * units.vw;
+    } else if (size.substr(-2) === "vh") {
+      return parseFloat(size) * units.vh;
+    }
+
+    return 0;
+  }
+
   // TODO многие объекты появляются вне вьюпорта
   /**
    * Spawn from left side or from top side of container
@@ -187,9 +215,15 @@ const FallingObjects = async (
     const randomPosition = Math.floor(Math.random() * (height + width));
 
     if (randomPosition < height) {
-      return [0 - object_width, randomPosition - object_height];
+      return [
+        0 - getObjectSize(object_width),
+        randomPosition - getObjectSize(object_height),
+      ];
     } else {
-      return [randomPosition - height - object_width, 0 - object_height];
+      return [
+        randomPosition - height - getObjectSize(object_width),
+        0 - getObjectSize(object_height),
+      ];
     }
   }
 
@@ -248,8 +282,8 @@ const FallingObjects = async (
   }
 
   async function createObject(object_url, gradient, x, y) {
-    const width = object_width,
-      height = object_height;
+    const width = getObjectSize(object_width),
+      height = getObjectSize(object_height);
     const fillColor = "black";
 
     // fetch svg from url
@@ -278,9 +312,12 @@ const FallingObjects = async (
         const { width, height } = getContainerSize();
         const { y, x } = this;
 
+        // TODO better detection of progress
         return Math.max(
-          (y + object_height) / (height - Math.random() * height * 0.14),
-          (x + object_width) / (width - Math.random() * width * 0.14)
+          (y + getObjectSize(object_height)) /
+            (height - Math.random() * height * 0.14),
+          (x + getObjectSize(object_width)) /
+            (width - Math.random() * width * 0.14)
         );
       },
       getColor: function getColor() {
