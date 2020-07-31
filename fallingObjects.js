@@ -304,24 +304,35 @@ const FallingObjects = async (
     // set fill color
     svgDoc.style.fill = fillColor;
 
+    // Геометрия с прямоугольными треугольниками
+    const container_size = getContainerSize();
+    const triangle_to_bottom = (container_size.height - y) / Math.cos((move_angle * Math.PI) / 180)
+    const triangle_to_right = (container_size.width - x) / Math.sin((move_angle * Math.PI) / 180)
+    let end_pos;
+
+    if (triangle_to_bottom > triangle_to_right) {
+      end_pos = [x + triangle_to_bottom * Math.sin((move_angle * Math.PI) / 180), container_size.height]
+    } else {
+      end_pos = [container_size.width, y + triangle_to_right * Math.cos((move_angle * Math.PI) / 180)]
+    }
+
     return {
       getCanvas: () => {
         return $CANVAS;
       },
       gradient,
+      start_pos: [x, y],
+      end_pos,
       svg: svgDoc, // вместо того чтобы хранить SVGElement рендерить разметку svg с помощью текста getSvg(fill, opacity)
       key: `${Date.now()}${Math.random()}`,
       getProgress: function getProgress() {
         const { width, height } = getContainerSize();
-        const { y, x } = this;
+        const getHypotenuse = (a, b) => Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+        const { y, x, start_pos, end_pos } = this;
+        const duration = getHypotenuse(end_pos[0] - start_pos[0], end_pos[1] - start_pos[1]);
+        const current = getHypotenuse(end_pos[0] - x, end_pos[1] - y);
 
-        // TODO better detection of progress
-        return Math.max(
-          (y + getObjectSize(object_height)) /
-          (height - Math.random() * height * 0.14),
-          (x + getObjectSize(object_width)) /
-          (width - Math.random() * width * 0.14)
-        );
+        return (current / duration).toFixed(2)
       },
       getColor: function getColor() {
         const progress = this.getProgress.call(this) * 100;
