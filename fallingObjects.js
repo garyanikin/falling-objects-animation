@@ -29,7 +29,7 @@ const FallingObjects = async (
     initial_opacity = 0.9,
     end_opacity = 0.6,
     opacity_step = 0.1,
-    opacity_delay = 0,
+    opacity_delay = 3,
     background_color = "white",
     min_count = 1,
     max_count = 5,
@@ -244,16 +244,14 @@ const FallingObjects = async (
     };
     if (OBJECTS.length < min_count && isSpawned(0.2)) {
       spawn();
-    }
-
-    // From min_count to max_count chance for spawn / 2
-    if (OBJECTS.length < max_count && isSpawned(0.05)) {
+    } else if (OBJECTS.length < max_count && isSpawned(0.05)) {
+      // From min_count to max_count chance for spawn / 2
       spawn();
     }
   }
 
   async function render() {
-    if (!isResizing) {
+    const blendObjects = () => {
       // Blend old objects with background
       if (TICK >= opacity_delay) {
         opacityStep();
@@ -261,9 +259,14 @@ const FallingObjects = async (
       } else {
         TICK++;
       }
+    }
 
+    if (!isResizing) {
       if (OBJECTS.length) {
-        OBJECTS.forEach((object) => object.update());
+        OBJECTS.forEach((object) => {
+          blendObjects();
+          object.update();
+        });
       }
       spawnObjects();
     }
@@ -315,9 +318,9 @@ const FallingObjects = async (
         // TODO better detection of progress
         return Math.max(
           (y + getObjectSize(object_height)) /
-            (height - Math.random() * height * 0.14),
+          (height - Math.random() * height * 0.14),
           (x + getObjectSize(object_width)) /
-            (width - Math.random() * width * 0.14)
+          (width - Math.random() * width * 0.14)
         );
       },
       getColor: function getColor() {
