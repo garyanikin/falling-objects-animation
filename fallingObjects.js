@@ -1,3 +1,12 @@
+// Frame counter
+// const frames = []
+// const pushFrame = frame => frames.push(frame)
+// const getFrames = () => {
+//   // debugger;
+//   return (frames.reduce((acc, frame) => { return acc + frame }, 0) / frames.length)
+// }
+// window.getFrames = getFrames;
+
 /**
 * Анимация падающих объектов 
 * @param {svg_url[]} assets - ссылки на svg
@@ -29,7 +38,7 @@ const FallingObjects = async (
     initial_opacity = 0.9,
     end_opacity = 0.6,
     opacity_step = 0.1,
-    opacity_delay = 3,
+    opacity_delay = 10,
     background_color = "white",
     min_count = 1,
     max_count = 5,
@@ -315,6 +324,8 @@ const FallingObjects = async (
     } else {
       end_pos = [container_size.width, y + triangle_to_right * Math.cos((move_angle * Math.PI) / 180)]
     }
+    const getHypotenuse = (a, b) => Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+    const duration = getHypotenuse(end_pos[0] - x, end_pos[1] - y);
 
     return {
       getCanvas: () => {
@@ -322,14 +333,14 @@ const FallingObjects = async (
       },
       gradient,
       start_pos: [x, y],
+      duration,
       end_pos,
       svg: svgDoc, // вместо того чтобы хранить SVGElement рендерить разметку svg с помощью текста getSvg(fill, opacity)
       key: `${Date.now()}${Math.random()}`,
       getProgress: function getProgress() {
         const { width, height } = getContainerSize();
         const getHypotenuse = (a, b) => Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
-        const { y, x, start_pos, end_pos } = this;
-        const duration = getHypotenuse(end_pos[0] - start_pos[0], end_pos[1] - start_pos[1]);
+        const { y, x, end_pos, duration } = this;
         const current = getHypotenuse(end_pos[0] - x, end_pos[1] - y);
 
         return (current / duration).toFixed(2)
