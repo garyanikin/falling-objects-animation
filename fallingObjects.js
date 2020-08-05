@@ -72,6 +72,8 @@ const FallingObjects = async (
       const { width, height } = getContainerSize();
       resizeCanvas($CANVAS, { width, height, is_retina });
 
+      // remove all active objects
+      OBJECTS = [];
       isResizing = false;
       IS_ANIMATED = true;
       render();
