@@ -322,6 +322,9 @@ const FallingObjects = async (
     const triangle_to_right = (container_size.width - x) / Math.sin((move_angle * Math.PI) / 180)
     let end_pos;
 
+    // TODO проверить где заканчивается анимация
+    // Останавливать анимацию внтури вьюпорта
+
     if (triangle_to_bottom > triangle_to_right) {
       end_pos = [x + triangle_to_bottom * Math.sin((move_angle * Math.PI) / 180), container_size.height]
     } else {
