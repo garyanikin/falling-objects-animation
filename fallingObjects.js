@@ -38,8 +38,8 @@ const FallingObjects = async (
     transition_duration = [0.8, 1],
     initial_opacity = 0.7,
     end_opacity = 0.9,
-    opacity_step = 0.19,
-    opacity_delay = 16,
+    opacity_step = 0.2,
+    opacity_delay = 4,
     background_color = "white",
     min_count = 1,
     max_count = 5,
@@ -274,9 +274,9 @@ const FallingObjects = async (
     }
 
     if (!isResizing) {
+      blendObjects();
       if (OBJECTS.length) {
         OBJECTS.forEach((object) => {
-          blendObjects();
           object.update();
         });
       }
