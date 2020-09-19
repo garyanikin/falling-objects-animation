@@ -1,20 +1,14 @@
-// Frame counter
-// const frames = []
-// const pushFrame = frame => frames.push(frame)
-// const getFrames = () => {
-//   // debugger;
-//   return (frames.reduce((acc, frame) => { return acc + frame }, 0) / frames.length)
-// }
-// window.getFrames = getFrames;
-
 /**
-* Анимация падающих объектов 
+* Анимация падающих объектов v2.1
 * @param {svg_url[]} assets - ссылки на svg
 * @param {css_gradient[]} gradients - список градиентов
 * @param {
     delay: [min, max] number - скорость движения объекта (чем значение меньше, тем выше скорость движения)
     step_size: [min, max] number - длина шага объекта
     move_angle: number - угол движения объекта
+    end_position: number - процент высоты остановки
+    end_position_delta: number - дельта разброса остановки
+    out_viewport: number - процент пролетающих объектов
     duration: [before, after] number - продолжительность анимации
     initial_opacity: float - opacity объекта в начале анимации
     end_opacity: float - opacity объекта в конце анимации
@@ -35,7 +29,9 @@ const FallingObjects = async (
     delay = [1, 3],
     step_size = [10, 40],
     move_angle = 45,
-    transition_duration = [0.8, 1],
+    end_position = 100,
+    end_position_delta = 10,
+    out_viewport = 25,
     initial_opacity = 0.7,
     end_opacity = 0.9,
     opacity_step = 0.2,
@@ -271,7 +267,7 @@ const FallingObjects = async (
       } else {
         TICK++;
       }
-    }
+    };
 
     if (!isResizing) {
       blendObjects();
@@ -318,17 +314,25 @@ const FallingObjects = async (
 
     // Геометрия с прямоугольными треугольниками
     const container_size = getContainerSize();
-    const triangle_to_bottom = (container_size.height - y) / Math.cos((move_angle * Math.PI) / 180)
-    const triangle_to_right = (container_size.width - x) / Math.sin((move_angle * Math.PI) / 180)
+    const triangle_to_bottom =
+      (container_size.height - y) / Math.cos((move_angle * Math.PI) / 180);
+    const triangle_to_right =
+      (container_size.width - x) / Math.sin((move_angle * Math.PI) / 180);
     let end_pos;
 
     // TODO проверить где заканчивается анимация
     // Останавливать анимацию внтури вьюпорта
 
     if (triangle_to_bottom > triangle_to_right) {
-      end_pos = [x + triangle_to_bottom * Math.sin((move_angle * Math.PI) / 180), container_size.height]
+      end_pos = [
+        x + triangle_to_bottom * Math.sin((move_angle * Math.PI) / 180),
+        container_size.height,
+      ];
     } else {
-      end_pos = [container_size.width, y + triangle_to_right * Math.cos((move_angle * Math.PI) / 180)]
+      end_pos = [
+        container_size.width,
+        y + triangle_to_right * Math.cos((move_angle * Math.PI) / 180),
+      ];
     }
     const getHypotenuse = (a, b) => Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
     const duration = getHypotenuse(end_pos[0] - x, end_pos[1] - y);
@@ -344,13 +348,15 @@ const FallingObjects = async (
       svg: svgDoc, // вместо того чтобы хранить SVGElement рендерить разметку svg с помощью текста getSvg(fill, opacity)
       key: `${Date.now()}${Math.random()}`,
       getProgress: function getProgress() {
-        const getHypotenuse = (a, b) => Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+        const getHypotenuse = (a, b) =>
+          Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
         const { y, x, end_pos, duration } = this;
-        const current = duration - getHypotenuse(end_pos[0] - x, end_pos[1] - y);
+        const current =
+          duration - getHypotenuse(end_pos[0] - x, end_pos[1] - y);
 
-        if (end_pos[0] < x || end_pos[1] < y) return 1
+        if (end_pos[0] < x || end_pos[1] < y) return 1;
 
-        return (current / duration).toFixed(2)
+        return (current / duration).toFixed(2);
       },
       getColor: function getColor() {
         const progress = this.getProgress.call(this) * 100;
@@ -468,3 +474,12 @@ function throttle(func, timeFrame) {
     }
   };
 }
+
+// Frame counter
+// const frames = []
+// const pushFrame = frame => frames.push(frame)
+// const getFrames = () => {
+//   // debugger;
+//   return (frames.reduce((acc, frame) => { return acc + frame }, 0) / frames.length)
+// }
+// window.getFrames = getFrames;
