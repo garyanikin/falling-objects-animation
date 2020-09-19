@@ -29,9 +29,9 @@ const FallingObjects = async (
     delay = [1, 3],
     step_size = [10, 40],
     move_angle = 45,
-    end_position = 100,
-    end_position_delta = 10,
-    out_viewport = 25,
+    end_position = 0.8,
+    end_position_delta = 0.2,
+    out_viewport = 0.25,
     initial_opacity = 0.7,
     end_opacity = 0.9,
     opacity_step = 0.2,
@@ -320,20 +320,32 @@ const FallingObjects = async (
       (container_size.width - x) / Math.sin((move_angle * Math.PI) / 180);
     let end_pos;
 
-    // TODO проверить где заканчивается анимация
-    // Останавливать анимацию внтури вьюпорта
+    let pos_multiplier;
+    // Останавливаем анимацию внтури вьюпорта
+    if (Math.random() < out_viewport) {
+      pos_multiplier = 1;
+    } else {
+      // pos_multiplier max is 1
+      pos_multiplier = Math.min(
+        end_position -
+          end_position_delta / 2 +
+          Math.random() * end_position_delta,
+        1
+      );
+    }
 
-    if (triangle_to_bottom > triangle_to_right) {
+    if (triangle_to_bottom < triangle_to_right) {
       end_pos = [
         x + triangle_to_bottom * Math.sin((move_angle * Math.PI) / 180),
-        container_size.height,
+        container_size.height * pos_multiplier,
       ];
     } else {
       end_pos = [
-        container_size.width,
+        container_size.width * pos_multiplier,
         y + triangle_to_right * Math.cos((move_angle * Math.PI) / 180),
       ];
     }
+
     const getHypotenuse = (a, b) => Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
     const duration = getHypotenuse(end_pos[0] - x, end_pos[1] - y);
 
