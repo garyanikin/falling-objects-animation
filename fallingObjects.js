@@ -26,10 +26,10 @@ const FallingObjects = async (
   assets,
   cssGradients,
   {
-    delay = [1, 3],
+    delay = [1, 1],
     step_size = [10, 40],
     move_angle = 45,
-    end_position = 0.8,
+    end_position = 0.7,
     end_position_delta = 0.15,
     out_viewport = 0.2,
     initial_opacity = 0.7,
@@ -313,6 +313,7 @@ const FallingObjects = async (
     svgDoc.style.fill = fillColor;
 
     // Геометрия с прямоугольными треугольниками
+    // получаем гипотенузу до конца экрана
     const container_size = getContainerSize();
     const triangle_to_bottom =
       (container_size.height - y) / Math.cos((move_angle * Math.PI) / 180);
@@ -334,15 +335,23 @@ const FallingObjects = async (
       );
     }
 
+    // умножаем большую сторону треугольника на pos_multiplier
+    // получаем координаты x, y конца анимации
     if (triangle_to_bottom < triangle_to_right) {
       end_pos = [
-        x + triangle_to_bottom * Math.sin((move_angle * Math.PI) / 180),
+        x +
+          triangle_to_bottom *
+            pos_multiplier *
+            Math.sin((move_angle * Math.PI) / 180),
         container_size.height * pos_multiplier,
       ];
     } else {
       end_pos = [
         container_size.width * pos_multiplier,
-        y + triangle_to_right * Math.cos((move_angle * Math.PI) / 180),
+        y +
+          triangle_to_right *
+            pos_multiplier *
+            Math.cos((move_angle * Math.PI) / 180),
       ];
     }
 
@@ -408,11 +417,6 @@ const FallingObjects = async (
           const { svg, updatePosition, getColor, getProgress } = this;
           const progress = getProgress.call(this);
 
-          if (progress >= 1) {
-            this.remove.call(this);
-            return;
-          }
-
           // set opacity
           svg.style.opacity =
             (initial_opacity - end_opacity) * (1 - easing(progress)) +
@@ -426,6 +430,11 @@ const FallingObjects = async (
           renderObject(this.getCanvas(), svg, position);
 
           this.tick = 0;
+
+          if (progress >= 1) {
+            this.remove.call(this);
+            return;
+          }
         }
 
         this.tick = this.tick + 1;
