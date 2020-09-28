@@ -26,7 +26,7 @@ const FallingObjects = async (
   assets,
   cssGradients,
   {
-    delay = [1, 1],
+    delay = 2,
     step_size = [10, 40],
     move_angle = 45,
     end_position = 0.7,
@@ -475,9 +475,9 @@ const FallingObjects = async (
             this.remove.call(this);
             return;
           }
+        } else {
+          this.tick = this.tick + 1;
         }
-
-        this.tick = this.tick + 1;
       },
       updatePosition: function updatePosition() {
         this.x =
@@ -494,7 +494,9 @@ const FallingObjects = async (
       x,
       y,
       step_size: step_size[0] + Math.random() * (step_size[1] - step_size[0]),
-      delay: Math.floor(delay[0] + Math.random() * (delay[1] - delay[0])),
+      delay: Array.isArray(delay)
+        ? Math.floor(delay[0] + Math.random() * (delay[1] - delay[0]))
+        : delay,
       fillColor,
     };
   }
