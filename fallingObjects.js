@@ -42,6 +42,9 @@ const FallingObjects = async (
     object_width = "10vw",
     object_height = "10vw",
     is_retina = true,
+    overlay_elem = null,
+    overlay_value = 0.65,
+    overlay_size = 0.8,
   }
 ) => {
   // POLYFILLS
@@ -107,6 +110,25 @@ const FallingObjects = async (
           { threshold: 0.2 }
         );
         observer.observe($CONTAINER);
+
+        // Overlay logic
+        if (!overlay_elem) return;
+
+        const overlayPiece =
+          (window.innerHeight * overlay_size) / overlay_elem.offsetHeight;
+        let observerOverlay = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.intersectionRatio > overlayPiece) {
+                toggleOverlay($CONTAINER, true);
+              } else {
+                toggleOverlay($CONTAINER, false);
+              }
+            });
+          },
+          { threshold: overlayPiece }
+        );
+        observerOverlay.observe(overlay_elem);
       }
     },
     render,
@@ -161,6 +183,15 @@ const FallingObjects = async (
       createCanvas($container);
     } else {
       // Detect if there is canvas
+    }
+  }
+
+  function toggleOverlay($container, isOverlay) {
+    $container.style.transition = "opacity 0.2s";
+    if (isOverlay) {
+      requestAnimationFrame(() => ($container.style.opacity = overlay_value));
+    } else {
+      requestAnimationFrame(() => ($container.style.opacity = 1));
     }
   }
 
