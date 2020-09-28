@@ -61,9 +61,11 @@ const FallingObjects = async (
   let IS_ANIMATED = false;
   let $CONTAINER = null;
   var $CANVAS = null;
+  let PARSED_SVG = {};
   var TICK = 0;
   let OBJECTS = [];
   var isResizing = false;
+
   // pause animation on resize
   var onResize = () => {
     pause();
@@ -328,20 +330,26 @@ const FallingObjects = async (
       height = getObjectSize(object_height);
     const fillColor = "black";
 
-    // fetch svg from url
-    const svg = await fetchObject(object_url);
+    let svgDoc;
+    if (PARSED_SVG[object_url]) {
+      svgDoc = PARSED_SVG[object_url];
+    } else {
+      // fetch svg from url
+      const svg = await fetchObject(object_url);
 
-    // TODO Change to Canvas
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(svg, "image/svg+xml").documentElement;
-    svgDoc.setAttribute("class", "object");
-    // set size
-    svgDoc.setAttribute("width", width);
-    svgDoc.setAttribute("height", height);
-    // set opacity
-    svgDoc.style.opacity = initial_opacity;
-    // set fill color
-    svgDoc.style.fill = fillColor;
+      // TODO Change to Canvas
+      const parser = new DOMParser();
+      svgDoc = parser.parseFromString(svg, "image/svg+xml").documentElement;
+      svgDoc.setAttribute("class", "object");
+      // set size
+      svgDoc.setAttribute("width", width);
+      svgDoc.setAttribute("height", height);
+      // set opacity
+      svgDoc.setAttribute("style", "REPLACE");
+
+      svgDoc = svgDoc.outerHTML;
+      PARSED_SVG[object_url] = svgDoc;
+    }
 
     // Геометрия с прямоугольными треугольниками
     // получаем гипотенузу до конца экрана
@@ -449,16 +457,17 @@ const FallingObjects = async (
           const progress = getProgress.call(this);
 
           // set opacity
-          svg.style.opacity =
+          const opacity =
             (initial_opacity - end_opacity) * (1 - easing(progress)) +
             end_opacity;
 
           // set fill color
-          svg.style.fill = getColor.call(this);
+          const fill = getColor.call(this);
 
           // set position
           const position = updatePosition.call(this);
-          renderObject(this.getCanvas(), svg, position);
+          const updatedSvg = updateSvg(svg, fill, opacity);
+          renderObject(this.getCanvas(), updatedSvg, position);
 
           this.tick = 0;
 
@@ -491,6 +500,11 @@ const FallingObjects = async (
   }
 };
 
+// Устанавливает в разметке svg стили с opacity и fill
+function updateSvg(svg, fill, opacity) {
+  return svg.replace("REPLACE", `fill: ${fill}; opacity: ${opacity};`);
+}
+
 function renderObject(canvas, svg, { x, y }) {
   var ctx = canvas.getContext("2d");
   var image = new Image();
@@ -498,8 +512,7 @@ function renderObject(canvas, svg, { x, y }) {
     ctx.drawImage(image, x, y);
   };
 
-  image.src =
-    "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.outerHTML);
+  image.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
 function parseGradient(cssGradient) {
