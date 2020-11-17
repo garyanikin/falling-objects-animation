@@ -206,15 +206,18 @@
         "linear-gradient(to right, #a770ef 0%, #cf8bf3 50%, #fdb99b 100%)",
       ];
 
+      window.fallingObjects = null;
       async function init() {
-        let fallingObjects;
+        if (window.fallingObjects) {
+          window.fallingObjects.stop();
+        }
 
         // Для экранов шириной больше 768px (планшеты и компьютеры)
         if (window.innerWidth > 768) {
-          fallingObjects = await FallingObjects(assets, gradients, {
+          window.fallingObjects = await FallingObjects(assets, gradients, {
             delay: 2,
-            object_width: "7vw",
-            object_height: "7vw",
+            object_width: 300,
+            object_height: 300,
             min_count: 5,
             max_count: 15,
             overlay_elem: document.querySelector(".overlay"),
@@ -222,14 +225,14 @@
           });
         } else {
           // Для мобильных устройств
-          fallingObjects = await FallingObjects(assets, gradients, {
+          window.fallingObjects = await FallingObjects(assets, gradients, {
             step_size: [4, 20],
-            object_width: "25vw",
-            object_height: "25vw",
+            object_width: 50,
+            object_height: 50,
           });
         }
 
-        fallingObjects.animate(document.querySelector(".container"));
+        window.fallingObjects.animate(document.querySelector(".container"));
       }
 
       init();
