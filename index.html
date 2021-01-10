@@ -206,35 +206,45 @@
         "linear-gradient(to right, #a770ef 0%, #cf8bf3 50%, #fdb99b 100%)",
       ];
 
-      window.fallingObjects = null;
+      let fallingObjects;
       async function init() {
-        if (window.fallingObjects) {
-          window.fallingObjects.stop();
+        // Останавливаем анимацию если она уже инициализирована
+        if (fallingObjects) {
+          fallingObjects.stop();
         }
 
-        // Для экранов шириной больше 768px (планшеты и компьютеры)
-        if (window.innerWidth > 768) {
-          window.fallingObjects = await FallingObjects(assets, gradients, {
-            delay: 2,
-            object_width: 300,
-            object_height: 300,
-            min_count: 5,
-            max_count: 15,
-            overlay_elem: document.querySelector(".overlay"),
-            overlay_value: 0.2,
-          });
-        } else {
-          // Для мобильных устройств
-          window.fallingObjects = await FallingObjects(assets, gradients, {
-            step_size: [4, 20],
-            object_width: 50,
-            object_height: 50,
-          });
-        }
-
-        window.fallingObjects.animate(document.querySelector(".container"));
+        fallingObjects = await FallingObjects(assets, gradients, {
+          overlay_elem: document.querySelector(".overlay"),
+          object_width: "30vw", // number - ширина объектов
+          object_height: "30vw", // number - высота объектов
+        });
+        fallingObjects.animate(document.querySelector(".container"));
       }
 
+      function throttle(f, t) {
+        let timeout;
+
+        return function (args) {
+          let previousCall = this.lastCall;
+          this.lastCall = Date.now();
+          if (
+            previousCall === undefined || // function is being called for the first time
+            this.lastCall - previousCall > t
+          ) {
+            clearTimeout(timeout);
+            // throttle time has elapsed
+            f(args);
+          } else {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => f(args), t);
+          }
+        };
+      }
+
+      let throttledInit = throttle(init, 200);
+      window.onresize = function (event) {
+        throttledInit();
+      };
       init();
     </script>
   </body>

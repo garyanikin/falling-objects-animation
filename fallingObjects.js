@@ -83,10 +83,9 @@ const FallingObjects = async (
   };
   var renderloop = null; // store animation frame request
 
-  const throttledResize = throttle(onResize, 150);
+  const throttledResize = throttle(onResize, 150 * 2);
   return {
     animate: ($container) => {
-      window.addEventListener("resize", throttledResize);
       IS_ANIMATED = true;
       $CONTAINER = $container;
 
@@ -139,7 +138,6 @@ const FallingObjects = async (
     spawnObjects,
     stop: () => {
       IS_ANIMATED = false;
-      window.removeEventListener("resize", throttledResize);
       cancelAnimationFrame(renderloop);
     },
   };
@@ -186,6 +184,10 @@ const FallingObjects = async (
       createCanvas($container);
     } else {
       $CANVAS = $container.getElementsByTagName("canvas")[0];
+      const width = $container.offsetWidth,
+        height = $container.offsetHeight;
+
+      resizeCanvas($CANVAS, { width, height, is_retina });
     }
   }
 
@@ -293,7 +295,6 @@ const FallingObjects = async (
   }
 
   async function render() {
-    console.log("render");
     const blendObjects = () => {
       // Blend old objects with background
       if (TICK >= opacity_delay) {
